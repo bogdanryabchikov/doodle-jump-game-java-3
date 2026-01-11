@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doodle Jump - Школа 258</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        body {
+            background: linear-gradient(180deg, #87CEEB 0%, #6495ED 100%);
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 15px;
+        }
+        
+        .game-title {
+            color: #FF3232;
+            font-size: 42px;
+            font-weight: bold;
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 5px;
+        }
+        
+        .school-name {
+            color: #1E3A8A;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        #game-canvas {
+            width: 100%;
+            height: 660px;
+            background: #87CEEB;
+            border-radius: 15px;
+            border: 4px solid #1E3A8A;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 440px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .mobile-btn {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #2d3047, #252738);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .mobile-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .left-btn {
+            background: linear-gradient(145deg, #6495ED, #4169E1);
+            border: 3px solid #1E3A8A;
+        }
+        
+        .right-btn {
+            background: linear-gradient(145deg, #6495ED, #4169E1);
+            border: 3px solid #1E3A8A;
+        }
+        
+        .jump-btn {
+            background: linear-gradient(145deg, #FF6B6B, #FF3232);
+            border: 3px solid #8B0000;
+            font-size: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: block;
+            }
+            
+            #game-canvas {
+                height: 600px;
+            }
+            
+            .game-title {
+                font-size: 36px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #game-canvas {
+                height: 500px;
+            }
+            
+            .game-title {
+                font-size: 30px;
+            }
+            
+            .mobile-btn {
+                padding: 15px;
+                font-size: 18px;
+            }
+        }
+        
+        .instructions {
+            margin-top: 15px;
+            color: #1E3A8A;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .game-over-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .game-over h2 {
+            color: #FF3232;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(145deg, #4ecdc4, #3bb4a2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="game-title">DOODLE JUMP</div>
+            <div class="school-name">ШКОЛА 258</div>
+        </div>
+        
+        <div class="hud">
+            <div>Очки: <span id="score">0</span></div>
+            <div>Рекорд: <span id="high-score">0</span></div>
+            <div id="combo-display" style="display: none;">Комбо: <span id="combo">0</span></div>
+        </div>
+        
+        <canvas id="game-canvas"></canvas>
+        
+        <div class="mobile-controls">
+            <div class="btn-row">
+                <button class="mobile-btn left-btn" id="btn-left">← ЛЕВО</button>
+                <button class="mobile-btn right-btn" id="btn-right">ПРАВО →</button>
+            </div>
+            <button class="mobile-btn jump-btn" id="btn-jump">⬆ ПРЫЖОК</button>
+        </div>
+        
+        <div class="instructions">
+            На компьютере: ← → или A D для движения, ПРОБЕЛ для прыжка<br>
+            На телефоне: используйте кнопки или наклоняйте устройство
+        </div>
+    </div>
+    
+    <div class="game-over" id="game-over">
+        <div class="game-over-content">
+            <h2>ИГРА ОКОНЧЕНА</h2>
+            <p>Ваш счет: <span id="final-score">0</span></p>
+            <p>Рекорд: <span id="final-high-score">0</span></p>
+            <button class="restart-btn" id="restart-btn">ИГРАТЬ СНОВА</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== КОНСТАНТЫ И НАСТРОЙКИ ====================
+        const GAME_WIDTH = 440;
+        const GAME_HEIGHT = 660;
+        const GRAVITY = 0.4;
+        const JUMP_FORCE = 10;
+        const PLAYER_WIDTH = 45;
+        const PLAYER_HEIGHT = 60;
+        const PLATFORM_WIDTH = 70;
+        const PLATFORM_HEIGHT = 20;
+        const SCROLL_THRESHOLD = 220;
+        const MIN_HEIGHT_FOR_SCORE = 55;
+        const MIN_PLATFORM_DISTANCE = 80;
+
+        // Цвета как в PyGame версии
+        const COLORS = {
+            WHITE: '#FFFFFF',
+            BLACK: '#000000',
+            YELLOW: '#FFFF00',
+            ORANGE: '#FFA500',
+            RED: '#FF3232',
+            GREEN: '#32FF32',
+            BLUE: '#4169E1',
+            PURPLE: '#B446DC',
+            BACKGROUND: '#87CEEB',
+            DARK_BLUE: '#1E3A8A',
+            LIGHT_BLUE: '#6495ED',
+            PINK: '#FF96C8',
+            SCHOOL_YELLOW: '#FFDC64',
+            SCHOOL_BROWN: '#966432',
+            GRAY: '#808080',
+            GLOW: '#FFFF96'
+        };
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
+
+        // ==================== КЛАССЫ ИГРЫ ====================
+        class ScoreSystem {
+            constructor() {
+                this.score = 0;
+                this.highScore = localStorage.getItem('doodleHighScore') || 0;
+                this.combo = 0;
+                this.maxCombo = 0;
+                this.multiplier = 1.0;
+                this.lastPlatformY = GAME_HEIGHT - 100;
+            }
+
+            addScore(points, reason = "") {
+                const actualPoints = Math.floor(points * this.multiplier);
+                this.score += actualPoints;
+                
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('doodleHighScore', this.highScore);
+                }
+                
+                return actualPoints;
+            }
+
+            addPlatformHit(platformType, platformY) {
+                const heightDiff = Math.abs(this.lastPlatformY - platformY);
+                
+                if (heightDiff >= MIN_HEIGHT_FOR_SCORE) {
+                    this.combo++;
+                    if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+                    
+                    if (this.combo >= 5) {
+                        this.multiplier = Math.min(3.0, 1.0 + (this.combo - 4) * 0.2);
+                    }
+                    
+                    this.lastPlatformY = platformY;
+                } else {
+                    this.combo = 0;
+                    this.multiplier = 1.0;
+                }
+
+                let points = 0;
+                switch(platformType) {
+                    case 'normal': points = 10; break;
+                    case 'moving': points = 20; break;
+                    case 'breaking': points = 30; break;
+                    case 'spring': points = 15; break;
+                }
+
+                points += this.combo * 2;
+                return this.addScore(points, `платформа ${platformType}`);
+            }
+
+            addPerfectLanding() {
+                return this.addScore(50, "идеальное приземление!");
+            }
+
+            reset() {
+                this.score = 0;
+                this.combo = 0;
+                this.multiplier = 1.0;
+                this.lastPlatformY = GAME_HEIGHT - 100;
+            }
+        }
+
+        class Platform {
+            constructor(x, y, type = 'normal') {
+                this.x = x;
+                this.y = y;
+                this.width = PLATFORM_WIDTH;
+                this.height = PLATFORM_HEIGHT;
+                this.type = type;
+                this.direction = type === 'moving' ? (Math.random() > 0.5 ? 1 : -1) : 0;
+                this.speed = type === 'moving' ? 1 + Math.random() : 0;
+                this.landAnimation = 0;
+                this.breaking = false;
+                this.springUsed = false;
+            }
+
+            update() {
+                if (this.type === 'moving') {
+                    this.x += this.direction * this.speed;
+                    if (this.x <= 0 || this.x + this.width >= GAME_WIDTH) {
+                        this.direction *= -1;
+                    }
+                }
+
+                if (this.landAnimation > 0) {
+                    this.landAnimation--;
+                }
+
+                return !(this.breaking && this.landAnimation <= 0);
+            }
+
+            onLand(scoreSystem) {
+                this.landAnimation = 10;
+                if (this.type === 'breaking') {
+                    this.breaking = true;
+                }
+                if (this.type === 'spring') {
+                    this.springUsed = true;
+                }
+                return scoreSystem.addPlatformHit(this.type, this.y);
+            }
+
+            draw() {
+                ctx.save();
+                
+                let color;
+                switch(this.type) {
+                    case 'normal': color = COLORS.GREEN; break;
+                    case 'moving': color = COLORS.PURPLE; break;
+                    case 'breaking': color = COLORS.RED; break;
+                    case 'spring': color = COLORS.YELLOW; break;
+                }
+
+                if (this.breaking && this.landAnimation > 0) {
+                    const scale = this.landAnimation / 10;
+                    const width = this.width * scale;
+                    const height = this.height * scale;
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(
+                        this.x + (this.width - width) / 2,
+                        this.y + (this.height - height) / 2,
+                        width,
+                        height
+                    );
+                } else if (this.landAnimation > 0) {
+                    const scaleY = 1.0 + 0.1 * (this.landAnimation / 10);
+                    const height = this.height * scaleY;
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(
+                        this.x,
+                        this.y - (height - this.height) / 2,
+                        this.width,
+                        height
+                    );
+                } else {
+                    // Рисуем карандаш (платформу)
+                    this.drawPencil(color);
+                }
+
+                ctx.restore();
+            }
+
+            drawPencil(color) {
+                // Основная часть карандаша
+                ctx.fillStyle = color;
+                this.roundRect(this.x, this.y, this.width, this.height, 5);
+                ctx.fill();
+                
+                // Контур
+                ctx.strokeStyle = COLORS.BLACK;
+                ctx.lineWidth = 2;
+                this.roundRect(this.x, this.y, this.width, this.height, 5);
+                ctx.stroke();
+
+                // Грифель (слева)
+                ctx.fillStyle = COLORS.GRAY;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y + this.height / 2 - 3);
+                ctx.lineTo(this.x + 12, this.y);
+                ctx.lineTo(this.x + 12, this.y + this.height);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Линия отделяющая грифель
+                ctx.beginPath();
+                ctx.moveTo(this.x + 12, this.y);
+                ctx.lineTo(this.x + 12, this.y + this.height);
+                ctx.stroke();
+
+                // Полоски на карандаше
+                ctx.strokeStyle = COLORS.WHITE;
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 3; i++) {
+                    const y = this.y + 4 + i * 4;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + 15, y);
+                    ctx.lineTo(this.x + this.width - 5, y);
+                    ctx.stroke();
+                }
+
+                // Особенности платформ
+                if (this.type === 'moving') {
+                    ctx.fillStyle = COLORS.WHITE;
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (this.type === 'breaking') {
+                    ctx.strokeStyle = COLORS.BLACK;
+                    ctx.lineWidth = 2;
+                    
+                    // Трещина 1
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + 25, this.y + 5);
+                    ctx.lineTo(this.x + 35, this.y + 15);
+                    ctx.lineTo(this.x + 45, this.y + 5);
+                    ctx.stroke();
+                    
+                    // Трещина 2
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + 55, this.y + 15);
+                    ctx.lineTo(this.x + 65, this.y + 5);
+                    ctx.lineTo(this.x + 75, this.y + 15);
+                    ctx.stroke();
+                } else if (this.type === 'spring') {
+                    ctx.strokeStyle = COLORS.BLACK;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        const x = this.x + 25 + i * 8;
+                        const y = this.y + (i % 2 === 0 ? 5 : 15);
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            roundRect(x, y, width, height, radius) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+            }
+        }
+
+        class Player {
+            constructor(isBoy = true) {
+                this.x = GAME_WIDTH / 2 - PLAYER_WIDTH / 2;
+                this.y = GAME_HEIGHT - 200;
+                this.width = PLAYER_WIDTH;
+                this.height = PLAYER_HEIGHT;
+                this.velocityY = 0;
+                this.jumping = false;
+                this.direction = 1; // 1 = вправо, -1 = влево
+                this.isBoy = isBoy;
+                this.lastPlatform = null;
+                this.justJumped = false;
+                this.animationTimer = 0;
+                this.walkAnimation = false;
+            }
+
+            update(platforms, scoreSystem) {
+                this.justJumped = false;
+                this.velocityY += GRAVITY;
+                this.y += this.velocityY;
+
+                this.animationTimer++;
+                this.walkAnimation = keys.LEFT || keys.RIGHT;
+
+                // Проверка столкновений с платформами
+                for (const platform of platforms) {
+                    if (this.velocityY > 0) {
+                        if (this.y + this.height >= platform.y &&
+                            this.y + this.height <= platform.y + 10 &&
+                            this.x + this.width > platform.x &&
+                            this.x < platform.x + platform.width) {
+
+                            const playerCenter = this.x + this.width / 2;
+                            const platformCenter = platform.x + platform.width / 2;
+                            const distance = Math.abs(playerCenter - platformCenter);
+
+                            let perfectBonus = 0;
+                            if (distance < 10 && platform !== this.lastPlatform) {
+                                perfectBonus = scoreSystem.addPerfectLanding();
+                            }
+
+                            const pointsAdded = platform.onLand(scoreSystem);
+
+                            if (platform.type === 'spring') {
+                                this.jump(JUMP_FORCE * 1.5);
+                            } else {
+                                this.jump();
+                            }
+
+                            this.justJumped = true;
+                            this.lastPlatform = platform;
+                            
+                            return { points: pointsAdded + perfectBonus, x: platform.x + platform.width / 2, y: platform.y };
+                        }
+                    }
+                }
+
+                // Выход за границы экрана (телепортация)
+                if (this.x > GAME_WIDTH) {
+                    this.x = -this.width;
+                } else if (this.x + this.width < 0) {
+                    this.x = GAME_WIDTH;
+                }
+
+                // Падение за нижнюю границу
+                if (this.y > GAME_HEIGHT) {
+                    return null;
+                }
+
+                return { points: 0, x: 0, y: 0 };
+            }
+
+            jump(force = JUMP_FORCE) {
+                this.velocityY = -force;
+                this.jumping = true;
+            }
+
+            move(direction) {
+                this.x += direction * 8;
+                this.direction = direction;
+            }
+
+            draw() {
+                ctx.save();
+                
+                // Цвет игрока в зависимости от пола
+                const playerColor = this.isBoy ? '#6495ED' : '#FF96C8';
+                
+                // Анимация прыжка
+                if (this.jumping && this.velocityY < 0) {
+                    const scaleFactor = 1.0 + Math.abs(this.velocityY) * 0.01;
+                    const scaledWidth = this.width * scaleFactor;
+                    const scaledHeight = this.height * scaleFactor;
+                    
+                    ctx.fillStyle = playerColor;
+                    ctx.fillRect(
+                        this.x - (scaledWidth - this.width) / 2,
+                        this.y - (scaledHeight - this.height),
+                        scaledWidth,
+                        scaledHeight
+                    );
+                    
+                    // Контур
+                    ctx.strokeStyle = COLORS.BLACK;
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(
+                        this.x - (scaledWidth - this.width) / 2,
+                        this.y - (scaledHeight - this.height),
+                        scaledWidth,
+                        scaledHeight
+                    );
+                }
+                // Анимация ходьбы
+                else if (this.walkAnimation && this.velocityY >= 0) {
+                    const bounce = Math.sin(this.animationTimer * 0.3) * 2;
+                    
+                    ctx.fillStyle = playerColor;
+                    ctx.fillRect(this.x, this.y + bounce, this.width, this.height);
+                    
+                    ctx.strokeStyle = COLORS.BLACK;
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(this.x, this.y + bounce, this.width, this.height);
+                }
+                // Обычное состояние
+                else {
+                    ctx.fillStyle = playerColor;
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                    
+                    ctx.strokeStyle = COLORS.BLACK;
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(this.x, this.y, this.width, this.height);
+                }
+
+                // Лицо
+                ctx.fillStyle = '#FFE4C4'; // Цвет кожи
+                ctx.beginPath();
+                ctx.arc(this.x + this.width / 2, this.y + 20, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Глаза
+                ctx.fillStyle = COLORS.BLACK;
+                ctx.beginPath();
+                const eyeOffset = this.direction > 0 ? -3 : 3;
+                ctx.arc(this.x + this.width / 2 - 5 + eyeOffset, this.y + 18, 2, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width / 2 + 5 + eyeOffset, this.y + 18, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Улыбка
+                ctx.beginPath();
+                ctx.arc(this.x + this.width / 2 + eyeOffset, this.y + 25, 6, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+
+                // Рюкзак
+                ctx.fillStyle = this.isBoy ? COLORS.DARK_BLUE : COLORS.PINK;
+                ctx.fillRect(this.x + 5, this.y + this.height - 15, 15, 12);
+                ctx.strokeRect(this.x + 5, this.y + this.height - 15, 15, 12);
+
+                ctx.restore();
+
+                if (this.velocityY >= 0) {
+                    this.jumping = false;
+                }
+            }
+        }
+
+        // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+        let scoreSystem = new ScoreSystem();
+        let player = new Player(true);
+        let platforms = [];
+        let gameOver = false;
+        let lastTime = 0;
+        let floatingTexts = [];
+        let keys = {
+            LEFT: false,
+            RIGHT: false,
+            SPACE: false
+        };
+
+        // ==================== ФУНКЦИИ ИГРЫ ====================
+        function generateInitialPlatforms() {
+            platforms = [];
+            
+            // Первая платформа под игроком
+            platforms.push(new Platform(
+                GAME_WIDTH / 2 - PLATFORM_WIDTH / 2,
+                GAME_HEIGHT - 100,
+                'normal'
+            ));
+
+            let currentY = GAME_HEIGHT - 150;
+
+            for (let i = 0; i < 19; i++) {
+                const rand = Math.random();
+                let platformType = 'normal';
+                
+                if (rand < 0.1) platformType = 'breaking';
+                else if (rand < 0.2) platformType = 'spring';
+                else if (rand < 0.4) platformType = 'moving';
+
+                let x, y;
+                let attempts = 0;
+                
+                do {
+                    x = Math.random() * (GAME_WIDTH - PLATFORM_WIDTH);
+                    y = currentY - 80 + Math.random() * 40;
+                    attempts++;
+                } while (!isValidPosition(x, y) && attempts < 50);
+
+                platforms.push(new Platform(x, y, platformType));
+                currentY = y;
+            }
+        }
+
+        function isValidPosition(x, y) {
+            if (x < 0 || x + PLATFORM_WIDTH > GAME_WIDTH) return false;
+
+            for (const platform of platforms) {
+                const verticalDistance = Math.abs(y - platform.y);
+                if (verticalDistance < MIN_PLATFORM_DISTANCE) {
+                    if (!(x + PLATFORM_WIDTH < platform.x || x > platform.x + platform.width)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function generateNewPlatforms() {
+            // Обновляем платформы
+            platforms = platforms.filter(p => p.update());
+            platforms = platforms.filter(p => p.y < GAME_HEIGHT + 100);
+
+            // Добавляем новые платформы
+            while (platforms.length < 15) {
+                let minY, maxY;
+                
+                if (platforms.length > 0) {
+                    const highestPlatform = platforms.reduce((min, p) => p.y < min.y ? p : min);
+                    minY = highestPlatform.y - 120;
+                    maxY = highestPlatform.y - 60;
+                } else {
+                    minY = -150;
+                    maxY = -80;
+                }
+
+                const rand = Math.random();
+                let platformType = 'normal';
+                
+                if (rand < 0.15) platformType = 'breaking';
+                else if (rand < 0.3) platformType = 'spring';
+                else if (rand < 0.5) platformType = 'moving';
+
+                let x, y;
+                let attempts = 0;
+                
+                do {
+                    x = Math.random() * (GAME_WIDTH - PLATFORM_WIDTH);
+                    y = minY + Math.random() * (maxY - minY);
+                    attempts++;
+                } while (!isValidPosition(x, y) && attempts < 50);
+
+                platforms.push(new Platform(x, y, platformType));
+            }
+        }
+
+        function drawBackground() {
+            // Градиентное небо
+            const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#6495ED');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // Облака
+            drawClouds();
+        }
+
+        function drawClouds() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            
+            // Статичные облака на заднем плане
+            ctx.beginPath();
+            ctx.arc(100, 100, 30, 0, Math.PI * 2);
+            ctx.arc(140, 90, 25, 0, Math.PI * 2);
+            ctx.arc(130, 120, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(350, 150, 25, 0, Math.PI * 2);
+            ctx.arc(380, 140, 30, 0, Math.PI * 2);
+            ctx.arc(370, 170, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawHUD() {
+            ctx.fillStyle = COLORS.WHITE;
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Очки: ${scoreSystem.score}`, 20, 40);
+            
+            ctx.fillStyle = COLORS.YELLOW;
+            ctx.fillText(`Рекорд: ${scoreSystem.highScore}`, 20, 70);
+
+            if (scoreSystem.combo > 0) {
+                ctx.fillStyle = COLORS.ORANGE;
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(`Комбо: ${scoreSystem.combo}`, 20, 100);
+            }
+
+            if (scoreSystem.multiplier > 1.0) {
+                ctx.fillStyle = '#FF69B4';
+                ctx.fillText(`Множитель: x${scoreSystem.multiplier.toFixed(1)}`, 20, 130);
+            }
+        }
+
+        // ==================== ИГРОВОЙ ЦИКЛ ====================
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (!gameOver) {
+                updateGame(deltaTime);
+            }
+
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateGame(deltaTime) {
+            // Обновление игрока
+            const result = player.update(platforms, scoreSystem);
+            
+            if (result === null) {
+                endGame();
+                return;
+            }
+
+            if (result.points > 0) {
+                addFloatingText(`+${result.points}`, result.x, result.y - 20, COLORS.YELLOW);
+                
+                if (scoreSystem.combo >= 3) {
+                    addFloatingText(`КОМБО x${scoreSystem.combo}!`, result.x, result.y - 40, COLORS.ORANGE);
+                }
+
+                if (scoreSystem.multiplier > 1.0) {
+                    addFloatingText(`x${scoreSystem.multiplier.toFixed(1)}`, result.x, result.y - 60, '#FF69B4');
+                }
+            }
+
+            // Прокрутка мира
+            if (player.y < SCROLL_THRESHOLD && player.velocityY < 0) {
+                const scrollAmount = SCROLL_THRESHOLD - player.y;
+
+                if (scrollAmount >= MIN_HEIGHT_FOR_SCORE) {
+                    const heightBonus = Math.floor(scrollAmount / 10);
+                    scoreSystem.addScore(heightBonus, "бонус за высоту");
+                    
+                    addFloatingText(
+                        `+${heightBonus}`,
+                        player.x + player.width / 2,
+                        player.y - 30,
+                        COLORS.DARK_BLUE
+                    );
+                }
+
+                player.y += scrollAmount;
+                platforms.forEach(platform => platform.y += scrollAmount);
+            }
+
+            // Обновление платформ
+            generateNewPlatforms();
+
+            // Управление
+            if (keys.LEFT) player.move(-1);
+            if (keys.RIGHT) player.move(1);
+
+            // Обновление плавающего текста
+            floatingTexts = floatingTexts.filter(text => text.update());
+        }
+
+        function drawGame() {
+            // Очистка canvas
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            
+            // Рисуем фон
+            drawBackground();
+            
+            // Рисуем платформы
+            platforms.forEach(platform => platform.draw());
+            
+            // Рисуем игрока
+            player.draw();
+            
+            // Рисуем плавающий текст
+            floatingTexts.forEach(text => text.draw());
+            
+            // Рисуем HUD
+            drawHUD();
+            
+            // Если игра окончена
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                
+                ctx.fillStyle = COLORS.WHITE;
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+            }
+        }
+
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+        class FloatingText {
+            constructor(text, x, y, color = COLORS.WHITE, size = 24, duration = 60) {
+                this.text = text;
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = size;
+                this.duration = duration;
+                this.timer = 0;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.timer++;
+                this.y -= 1;
+                this.alpha = Math.max(0, 1 - this.timer / this.duration);
+                return this.timer < this.duration;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        function addFloatingText(text, x, y, color, size = 24) {
+            floatingTexts.push(new FloatingText(text, x, y, color, size));
+        }
+
+        function endGame() {
+            gameOver = true;
+            document.getElementById('final-score').textContent = scoreSystem.score;
+            document.getElementById('final-high-score').textContent = scoreSystem.highScore;
+            document.getElementById('game-over').style.display = 'flex';
+        }
+
+        function restartGame() {
+            scoreSystem.reset();
+            player = new Player(true);
+            platforms = [];
+            floatingTexts = [];
+            gameOver = false;
+            generateInitialPlatforms();
+            document.getElementById('game-over').style.display = 'none';
+            updateScoreDisplay();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score').textContent = scoreSystem.score;
+            document.getElementById('high-score').textContent = scoreSystem.highScore;
+            document.getElementById('combo').textContent = scoreSystem.combo;
+            document.getElementById('combo-display').style.display = scoreSystem.combo > 0 ? 'block' : 'none';
+        }
+
+        // ==================== УПРАВЛЕНИЕ ====================
+        // Клавиатура
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'ArrowLeft':
+                case 'KeyA':
+                    keys.LEFT = true;
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    keys.RIGHT = true;
+                    break;
+                case 'Space':
+                    if (!gameOver && !keys.SPACE) {
+                        player.jump();
+                        keys.SPACE = true;
+                    }
+                    break;
+                case 'KeyR':
+                    if (gameOver) restartGame();
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.code) {
+                case 'ArrowLeft':
+                case 'KeyA':
+                    keys.LEFT = false;
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    keys.RIGHT = false;
+                    break;
+                case 'Space':
+                    keys.SPACE = false;
+                    break;
+            }
+        });
+
+        // Мобильные кнопки
+        document.getElementById('btn-left').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.LEFT = true;
+        });
+        document.getElementById('btn-left').addEventListener('touchend', () => {
+            keys.LEFT = false;
+        });
+
+        document.getElementById('btn-right').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.RIGHT = true;
+        });
+        document.getElementById('btn-right').addEventListener('touchend', () => {
+            keys.RIGHT = false;
+        });
+
+        document.getElementById('btn-jump').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameOver && !keys.SPACE) {
+                player.jump();
+                keys.SPACE = true;
+            }
+        });
+        document.getElementById('btn-jump').addEventListener('touchend', () => {
+            keys.SPACE = false;
+        });
+
+        // Акселерометр для телефона
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (e) => {
+                if (gameOver) return;
+                
+                const tilt = e.gamma; // -90 до 90 градусов
+                
+                if (tilt < -10) {
+                    keys.LEFT = true;
+                    keys.RIGHT = false;
+                } else if (tilt > 10) {
+                    keys.RIGHT = true;
+                    keys.LEFT = false;
+                } else {
+                    keys.LEFT = false;
+                    keys.RIGHT = false;
+                }
+            });
+        }
+
+        // Кнопка перезапуска
+        document.getElementById('restart-btn').addEventListener('click', restartGame);
+
+        // Предотвращение стандартного поведения
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.classList.contains('mobile-btn')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // ==================== ЗАПУСК ИГРЫ ====================
+        function init() {
+            generateInitialPlatforms();
+            updateScoreDisplay();
+            requestAnimationFrame(gameLoop);
+            console.log('Doodle Jump запущен!');
+        }
+
+        // Запуск при загрузке страницы
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
